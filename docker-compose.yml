@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Az adatbázis konténer (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: mixify-postgres
+    environment:
+      POSTGRES_USER: mixify_user
+      POSTGRES_PASSWORD: mixify_password
+      POSTGRES_DB: mixify_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # A mi Spring Boot alkalmazásunk konténere
+  app:
+    build: .
+    container_name: mixify-app
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      # Itt felülírjuk az application.properties H2 beállításait, hogy a Postgreshez csatlakozzon!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mixify_db
+      SPRING_DATASOURCE_USERNAME: mixify_user
+      SPRING_DATASOURCE_PASSWORD: mixify_password
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+volumes:
+  postgres_data:
